@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from octofit_tracker import views
+import os
+
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
@@ -25,8 +27,27 @@ router.register(r'activities', views.ActivityViewSet)
 router.register(r'workouts', views.WorkoutViewSet)
 router.register(r'leaderboard', views.LeaderboardViewSet)
 
+# Helper for API root URLs
+def get_api_urls():
+    codespace_name = os.environ.get('CODESPACE_NAME', '')
+    base_url = f"https://{codespace_name}-8000.app.github.dev" if codespace_name else "http://localhost:8000"
+    return {
+        'users': f'{base_url}/api/users/',
+        'teams': f'{base_url}/api/teams/',
+        'activities': f'{base_url}/api/activities/',
+        'workouts': f'{base_url}/api/workouts/',
+        'leaderboard': f'{base_url}/api/leaderboard/',
+    }
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
+def api_root(request, format=None):
+    return Response(get_api_urls())
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('', views.api_root, name='api-root'),
+    path('', api_root, name='api-root'),
 ]
